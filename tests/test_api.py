@@ -497,3 +497,58 @@ def test_create_order_creates_outbox_event() -> None:
 #     assert Decimal(str(event["price"])) == Decimal("125")
 #     assert event["quantity"] == 2
 #     assert Decimal(str(event["total"])) == Decimal("250")
+
+
+def test_list_orders_requires_authentication() -> None:
+    response = client.get("/orders")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid or missing authentication token"
+
+
+def test_create_order_requires_authentication() -> None:
+    response = client.post(
+        "/orders",
+        json={
+            "product_id": "p-secure",
+            "price": "100",
+            "quantity": 1,
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid or missing authentication token"
+
+
+def test_create_order_requires_writer_role() -> None:
+    response = client.post(
+        "/orders",
+        json={
+            "product_id": "p-secure",
+            "price": "100",
+            "quantity": 1,
+        },
+        headers=auth_headers(["order_reader"]),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Missing required role: order_writer"
+
+
+def test_list_orders_allows_reader_role() -> None:
+    response = client.get(
+        "/orders",
+        headers=auth_headers(["order_reader"]),
+    )
+
+    assert response.status_code == 200
+
+
+def test_invalid_token_is_rejected() -> None:
+    response = client.get(
+        "/orders",
+        headers={"Authorization": "Bearer invalid-token"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid or missing authentication token"
