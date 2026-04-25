@@ -11,6 +11,9 @@ from app.db.session import init_db
 from app.logging_config import configure_logging
 from app.middleware import request_context_middleware
 from app.services.order_service import InvalidOrderError
+from app.api.health import router as health_router
+from app.api.routes import router as order_router
+
 
 
 
@@ -41,12 +44,6 @@ app.add_exception_handler(
 )
 
 app.include_router(router)
+app.include_router(health_router)
+app.include_router(order_router)
 
-
-@app.get("/health")
-def health_check() -> dict[str, str]:
-    return {
-        "status": "ok",
-        "service": settings.app_name,
-        "environment": settings.environment,
-    }

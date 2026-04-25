@@ -552,3 +552,29 @@ def test_invalid_token_is_rejected() -> None:
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid or missing authentication token"
+
+
+def test_liveness_check() -> None:
+    response = client.get("/health/live")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["status"] == "alive"
+    assert body["service"] == "order-service"
+    assert body["environment"] == "test"
+
+
+def test_readiness_check_when_dependencies_are_available() -> None:
+    response = client.get("/health/ready")
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["status"] == "ready"
+    assert body["service"] == "order-service"
+    assert body["environment"] == "test"
+    assert body["checks"]["database"] == "ok"
+    assert body["checks"]["redis"] == "ok"
