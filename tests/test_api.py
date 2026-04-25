@@ -213,7 +213,7 @@ def test_create_order_rejects_blank_product_id() -> None:
 def test_request_id_header_is_returned() -> None:
     response = client.get(
         "/health",
-        headers=auth_headers().update({"X-Request-ID": "test-request-123"}),
+        headers={"X-Request-ID": "test-request-123"},
     )
 
     assert response.status_code == 200
@@ -236,7 +236,7 @@ def test_get_order_by_id_successfully() -> None:
     created_order = create_response.json()
     order_id = created_order["id"]
 
-    get_response = client.get(f"/orders/{order_id}")
+    get_response = client.get(f"/orders/{order_id}", headers=auth_headers(["order_reader"]),)
 
     assert get_response.status_code == 200
 
