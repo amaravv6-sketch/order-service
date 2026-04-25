@@ -13,6 +13,10 @@ services:
       DATABASE_URL: postgresql://orders_user:orders_password@postgres:5432/orders_db
       REDIS_URL: redis://redis:6379/0
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET_KEY: local-dev-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: order-service
+      JWT_AUDIENCE: order-service-api
     depends_on:
       - postgres
       - redis
@@ -32,6 +36,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       ORDER_CREATED_TOPIC: orders.created
+      JWT_SECRET_KEY: local-dev-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: order-service
+      JWT_AUDIENCE: order-service-api
     depends_on:
       - kafka
 
@@ -69,6 +77,10 @@ services:
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      JWT_SECRET_KEY: local-dev-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: order-service
+      JWT_AUDIENCE: order-service-api
 
   outbox-publisher:
     build:
@@ -84,9 +96,13 @@ services:
       REDIS_URL: redis://redis:6379/0
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       ORDER_CREATED_TOPIC: orders.created
+      JWT_SECRET_KEY: local-dev-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: order-service
+      JWT_AUDIENCE: order-service-api
     depends_on:
       - postgres
       - kafka
-      
+
 volumes:
   postgres_data:

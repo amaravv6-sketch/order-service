@@ -19,6 +19,10 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       KAFKA_BOOTSTRAP_SERVERS: localhost:9092
       ORDER_CREATED_TOPIC: orders.created
+      JWT_SECRET_KEY: test-secret
+      JWT_ALGORITHM: HS256
+      JWT_ISSUER: order-service
+      JWT_AUDIENCE: order-service-api
 
     steps:
       - name: Checkout code
@@ -37,7 +41,7 @@ jobs:
         
       - name: Run linting
         run: ruff check .
-        
+
       - name: Run type checking
         run: mypy app tests
 

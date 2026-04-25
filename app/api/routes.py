@@ -55,9 +55,8 @@ class OrderApiResponse(BaseModel):
 )
 def create_order_endpoint(
     request: CreateOrderApiRequest,
+    _current_user: Annotated[CurrentUser, Depends(require_role("order_writer"))],
     db: Session = Depends(get_db),
-    current_user: Annotated[CurrentUser, Depends(require_role("order_writer"))],
-    event_publisher: OrderEventPublisher = Depends(get_order_event_publisher),
 ) -> OrderApiResponse:
     order = create_order(
         CreateOrderRequest(
@@ -74,6 +73,7 @@ def create_order_endpoint(
         quantity=order.quantity,
         total=order.total,
     )
+
     return OrderApiResponse(
         id=saved_order.id,
         product_id=saved_order.product_id,
@@ -88,7 +88,7 @@ def create_order_endpoint(
     status_code=status.HTTP_200_OK,
 )
 def get_order_endpoint(
-    current_user: Annotated[CurrentUser, Depends(require_role("order_reader"))],
+    _current_user: Annotated[CurrentUser, Depends(require_role("order_reader"))],
     order_id: int = Path(..., gt=0),
     db: Session = Depends(get_db),
     redis_client: Redis = Depends(get_redis_client),
@@ -136,7 +136,7 @@ def get_order_endpoint(
     status_code=status.HTTP_200_OK,
 )
 def list_orders_endpoint(
-    current_user: Annotated[CurrentUser, Depends(require_role("order_reader"))],
+    _current_user: Annotated[CurrentUser, Depends(require_role("order_reader"))],
     product_id: str | None = Query(default=None, min_length=1),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
