@@ -9,3 +9,4 @@ psycopg2-binary
 redis
 kafka-python
 ruff
+mypy
