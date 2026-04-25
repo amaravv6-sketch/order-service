@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service-worker
+  labels:
+    app: order-service-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service-worker
+  template:
+    metadata:
+      labels:
+        app: order-service-worker
+    spec:
+      containers:
+        - name: order-worker
+          image: order-service-app:v1
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "app.workers.order_consumer"]
+          envFrom:
+            - configMapRef:
+                name: order-service-config
+            - secretRef:
+                name: order-service-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
