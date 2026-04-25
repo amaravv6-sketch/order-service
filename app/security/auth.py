@@ -22,12 +22,11 @@ class CurrentUser:
     subject: str
     roles: set[str]
 
-
 def create_access_token(
     subject: str,
     roles: list[str],
     expires_delta: timedelta | None = None,
-) -> str:
+    ) -> str:
     settings = get_settings()
 
     now = datetime.now(timezone.utc)
@@ -42,11 +41,14 @@ def create_access_token(
         "exp": expires_at,
     }
 
-    return jwt.encode(
+    token = jwt.encode(
         payload,
         settings.jwt_secret_key,
         algorithm=settings.jwt_algorithm,
     )
+
+    return cast(str, token)
+
 
 
 def _unauthorized_exception() -> HTTPException:
