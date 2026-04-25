@@ -2,12 +2,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 
-import json
-from datetime import datetime, timezone
-from uuid import uuid4
 
-from app.config import get_settings
-from app.repositories.outbox_repository import create_outbox_event
 
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from redis import Redis
 from app.cache.order_cache import get_cached_order, set_cached_order
 from app.cache.redis_client import get_redis_client
 
-from fastapi import APIRouter, Depends, status,  HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 

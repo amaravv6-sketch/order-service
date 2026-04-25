@@ -1,11 +1,11 @@
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import DateTime, func
-from sqlalchemy import Integer, Numeric, String
+from sqlalchemy import  Numeric, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, Numeric, String, Text, func
+
+from sqlalchemy import Boolean, Integer,  Text
 
 
 class Base(DeclarativeBase):
