@@ -1,7 +1,7 @@
 import json
 import logging
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from redis import Redis
 
@@ -33,13 +33,18 @@ def serialize_order(
 
 
 def deserialize_order(payload: str) -> dict[str, Any]:
-    return json.loads(payload)
+    data = json.loads(payload)
+
+    if not isinstance(data, dict):
+        raise ValueError("Cached order payload must be a JSON object")
+
+    return cast(dict[str, Any], data)
 
 
 def get_cached_order(redis_client: Redis, order_id: int) -> dict[str, Any] | None:
     key = _order_cache_key(order_id)
 
-    payload = redis_client.get(key)
+    payload = cast(str | None, redis_client.get(key))
 
     if payload is None:
         logger.info("Cache miss for order_id=%s", order_id)
