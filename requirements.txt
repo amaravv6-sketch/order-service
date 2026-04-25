@@ -10,3 +10,4 @@ redis
 kafka-python
 ruff
 mypy
+PyJWT
