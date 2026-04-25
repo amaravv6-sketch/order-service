@@ -15,10 +15,7 @@ from app.repositories.order_repository import (
     list_orders,
 )
 from app.services.order_service import CreateOrderRequest, create_order
-from app.events.order_publisher import (
-    OrderEventPublisher,
-    get_order_event_publisher,
-)
+
 
 from typing import Annotated
 
