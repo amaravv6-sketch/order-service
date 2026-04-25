@@ -13,12 +13,16 @@ class Settings(BaseSettings):
     kafka_bootstrap_servers: str = "localhost:9092"
     order_created_topic: str = "orders.created"
 
+    jwt_secret_key: str = "local-dev-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    jwt_issuer: str = "order-service"
+    jwt_audience: str = "order-service-api"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
-
 
 @lru_cache
 def get_settings() -> Settings:

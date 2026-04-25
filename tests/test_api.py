@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.cache.redis_client import get_redis_client
+from app.security.auth import create_access_token
 
 from app.events.order_publisher import get_order_event_publisher
 
@@ -19,6 +20,14 @@ from app.db.models import OutboxEventModel
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["ENVIRONMENT"] = "test"
 os.environ["LOG_LEVEL"] = "INFO"
+
+os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["KAFKA_BOOTSTRAP_SERVERS"] = "localhost:9092"
+os.environ["ORDER_CREATED_TOPIC"] = "orders.created"
+os.environ["JWT_SECRET_KEY"] = "test-secret"
+os.environ["JWT_ALGORITHM"] = "HS256"
+os.environ["JWT_ISSUER"] = "order-service"
+os.environ["JWT_AUDIENCE"] = "order-service-api"
 
 from app.db.models import Base
 from app.db.session import get_db
@@ -109,6 +118,14 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
+def auth_headers(roles: list[str] | None = None) -> dict[str, str]:
+    token = create_access_token(
+        subject="test-user",
+        roles=roles or ["order_reader", "order_writer"],
+    )
+
+    return {"Authorization": f"Bearer {token}"}
+
 
 @pytest.fixture(autouse=True)
 def reset_database() -> Generator[None, None, None]:
@@ -137,6 +154,7 @@ def test_create_order_successfully() -> None:
             "price": "250",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     assert response.status_code == 201
@@ -158,6 +176,7 @@ def test_create_order_rejects_zero_price() -> None:
             "price": "0",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     assert response.status_code == 422
@@ -171,6 +190,7 @@ def test_create_order_rejects_zero_quantity() -> None:
             "price": "250",
             "quantity": 0,
         },
+        headers=auth_headers(),
     )
 
     assert response.status_code == 422
@@ -184,6 +204,7 @@ def test_create_order_rejects_blank_product_id() -> None:
             "price": "250",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     assert response.status_code in (400, 422)
@@ -192,7 +213,7 @@ def test_create_order_rejects_blank_product_id() -> None:
 def test_request_id_header_is_returned() -> None:
     response = client.get(
         "/health",
-        headers={"X-Request-ID": "test-request-123"},
+        headers=auth_headers().update({"X-Request-ID": "test-request-123"}),
     )
 
     assert response.status_code == 200
@@ -207,6 +228,7 @@ def test_get_order_by_id_successfully() -> None:
             "price": "100",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
     assert create_response.status_code == 201
@@ -228,14 +250,14 @@ def test_get_order_by_id_successfully() -> None:
 
 
 def test_get_order_by_id_returns_404_when_not_found() -> None:
-    response = client.get("/orders/999999")
+    response = client.get("/orders/999999", headers=auth_headers(),)
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Order not found"
 
 
 def test_get_order_by_id_rejects_invalid_id() -> None:
-    response = client.get("/orders/0")
+    response = client.get("/orders/0", headers=auth_headers(),)
 
     assert response.status_code == 422
 
@@ -248,6 +270,7 @@ def test_list_orders_returns_orders() -> None:
             "price": "250",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     client.post(
@@ -257,9 +280,10 @@ def test_list_orders_returns_orders() -> None:
             "price": "100",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
-    response = client.get("/orders")
+    response = client.get("/orders", headers=auth_headers(),)
 
     assert response.status_code == 200
 
@@ -278,6 +302,7 @@ def test_list_orders_filters_by_product_id() -> None:
             "price": "250",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     client.post(
@@ -287,9 +312,10 @@ def test_list_orders_filters_by_product_id() -> None:
             "price": "100",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
-    response = client.get("/orders?product_id=p-100")
+    response = client.get("/orders?product_id=p-100", headers=auth_headers(),)
 
     assert response.status_code == 200
 
@@ -307,6 +333,7 @@ def test_list_orders_supports_pagination() -> None:
             "price": "250",
             "quantity": 3,
         },
+        headers=auth_headers(),
     )
 
     client.post(
@@ -316,9 +343,10 @@ def test_list_orders_supports_pagination() -> None:
             "price": "100",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
-    response = client.get("/orders?limit=1&offset=1")
+    response = client.get("/orders?limit=1&offset=1", headers=auth_headers(),)
 
     assert response.status_code == 200
 
@@ -329,7 +357,7 @@ def test_list_orders_supports_pagination() -> None:
 
 
 def test_list_orders_rejects_invalid_limit() -> None:
-    response = client.get("/orders?limit=0")
+    response = client.get("/orders?limit=0", headers=auth_headers(),)
 
     assert response.status_code == 422
 
@@ -342,6 +370,7 @@ def test_list_orders_supports_cursor_pagination() -> None:
             "price": "100",
             "quantity": 1,
         },
+        headers=auth_headers(),
     )
 
     second_response = client.post(
@@ -351,6 +380,7 @@ def test_list_orders_supports_cursor_pagination() -> None:
             "price": "200",
             "quantity": 1,
         },
+        headers=auth_headers(),
     )
 
     third_response = client.post(
@@ -360,11 +390,12 @@ def test_list_orders_supports_cursor_pagination() -> None:
             "price": "300",
             "quantity": 1,
         },
+        headers=auth_headers(),
     )
 
     first_order_id = first_response.json()["id"]
 
-    response = client.get(f"/orders?after_id={first_order_id}&limit=2")
+    response = client.get(f"/orders?after_id={first_order_id}&limit=2", headers=auth_headers(),)
 
     assert response.status_code == 200
 
@@ -376,7 +407,7 @@ def test_list_orders_supports_cursor_pagination() -> None:
 
 
 def test_list_orders_rejects_offset_and_after_id_together() -> None:
-    response = client.get("/orders?after_id=1&offset=1")
+    response = client.get("/orders?after_id=1&offset=1", headers=auth_headers(),)
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Use either after_id or offset, not both"
@@ -390,19 +421,20 @@ def test_get_order_by_id_uses_cache_after_first_read() -> None:
             "price": "50",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
     assert create_response.status_code == 201
 
     order_id = create_response.json()["id"]
 
-    first_get_response = client.get(f"/orders/{order_id}")
+    first_get_response = client.get(f"/orders/{order_id}", headers=auth_headers(),)
     assert first_get_response.status_code == 200
 
     cache_key = f"order:{order_id}"
     assert cache_key in fake_redis.store
 
-    second_get_response = client.get(f"/orders/{order_id}")
+    second_get_response = client.get(f"/orders/{order_id}", headers=auth_headers(),)
     assert second_get_response.status_code == 200
     assert second_get_response.json()["product_id"] == "p-cache"
 
@@ -414,6 +446,7 @@ def test_create_order_creates_outbox_event() -> None:
             "price": "125",
             "quantity": 2,
         },
+        headers=auth_headers(),
     )
 
     assert response.status_code == 201
