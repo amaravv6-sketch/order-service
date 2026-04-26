@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     otel_enabled: bool = True
     otel_console_exporter_enabled: bool = True
 
+    metrics_server_enabled: bool = True
+    metrics_server_port: int = 9000
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

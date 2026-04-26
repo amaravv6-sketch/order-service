@@ -23,6 +23,8 @@ jobs:
       JWT_ALGORITHM: HS256
       JWT_ISSUER: order-service
       JWT_AUDIENCE: order-service-api
+      METRICS_SERVER_ENABLED: "false"
+      METRICS_SERVER_PORT: "9000"
 
     steps:
       - name: Checkout code

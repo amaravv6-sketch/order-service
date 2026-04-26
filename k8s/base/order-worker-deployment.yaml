@@ -19,6 +19,9 @@ spec:
           image: order-service-app:v1
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.workers.order_consumer"]
+          ports:
+            - name: metrics
+              containerPort: 9000
           envFrom:
             - configMapRef:
                 name: order-service-config

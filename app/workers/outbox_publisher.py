@@ -11,6 +11,7 @@ from app.repositories.outbox_repository import (
     mark_event_published,
 )
 from app.observability.metrics import OUTBOX_EVENTS_PUBLISHED_TOTAL
+from app.observability.metrics_server import start_worker_metrics_server
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,7 @@ def publish_pending_outbox_events() -> int:
 def run_outbox_publisher() -> None:
     configure_logging()
     init_db()
+    start_worker_metrics_server()
 
     logger.info("Started outbox publisher worker")
 

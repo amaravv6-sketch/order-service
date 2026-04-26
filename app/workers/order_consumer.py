@@ -18,6 +18,7 @@ from app.observability.metrics import (
     KAFKA_EVENTS_PROCESSED_TOTAL,
     KAFKA_EVENTS_SKIPPED_TOTAL,
 )
+from app.observability.metrics_server import start_worker_metrics_server
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def process_order_created_event(db: Session, event: dict[str, Any]) -> None:
 def run_consumer() -> None:
     configure_logging()
     init_db()
-
+    start_worker_metrics_server()
     settings = get_settings()
 
     consumer = KafkaConsumer(

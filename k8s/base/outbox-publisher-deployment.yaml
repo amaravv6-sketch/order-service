@@ -16,6 +16,9 @@ spec:
     spec:
       containers:
         - name: outbox-publisher
+          ports:
+            - name: metrics
+              containerPort: 9000
           image: order-service-app:v1
           imagePullPolicy: IfNotPresent
           command: ["python", "-m", "app.workers.outbox_publisher"]

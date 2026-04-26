@@ -20,3 +20,6 @@ resources:
 
   - outbox-publisher-deployment.yaml
   - order-worker-deployment.yaml
+
+  - outbox-publisher-metrics-service.yaml
+  - order-worker-metrics-service.yaml
