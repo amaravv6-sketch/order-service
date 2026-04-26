@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any, cast
 
 from redis import Redis
+from app.observability.metrics import CACHE_HITS_TOTAL, CACHE_MISSES_TOTAL
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,10 @@ def get_cached_order(redis_client: Redis, order_id: int) -> dict[str, Any] | Non
     payload = cast(str | None, redis_client.get(key))
 
     if payload is None:
+        CACHE_MISSES_TOTAL.labels(cache_name="order").inc()
         logger.info("Cache miss for order_id=%s", order_id)
         return None
-
+    CACHE_HITS_TOTAL.labels(cache_name="order").inc()
     logger.info("Cache hit for order_id=%s", order_id)
     return deserialize_order(payload)
 

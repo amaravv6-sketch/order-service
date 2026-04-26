@@ -14,6 +14,10 @@ from app.repositories.processed_event_repository import (
     is_event_processed,
     mark_event_processed,
 )
+from app.observability.metrics import (
+    KAFKA_EVENTS_PROCESSED_TOTAL,
+    KAFKA_EVENTS_SKIPPED_TOTAL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +41,11 @@ def process_order_created_event(db: Session, event: dict[str, Any]) -> None:
     total = event["total"]
 
     if is_event_processed(db, event_id):
+        KAFKA_EVENTS_SKIPPED_TOTAL.labels(
+        topic="orders.created",
+        event_type=event_type,
+        ).inc()
+
         logger.info(
             "Skipping already processed event event_id=%s order_id=%s",
             event_id,
@@ -66,7 +75,10 @@ def process_order_created_event(db: Session, event: dict[str, Any]) -> None:
             order_id,
         )
         return
-
+    KAFKA_EVENTS_PROCESSED_TOTAL.labels(
+        topic="orders.created",
+        event_type=event_type,
+    ).inc()
     logger.info(
         "Marked event as processed event_id=%s order_id=%s",
         event_id,

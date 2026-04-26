@@ -13,7 +13,8 @@ from app.middleware import request_context_middleware
 from app.services.order_service import InvalidOrderError
 from app.api.health import router as health_router
 from app.api.routes import router as order_router
-
+from app.observability.telemetry import configure_telemetry
+from app.api.metrics import router as metrics_router
 
 
 
@@ -35,7 +36,7 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
-
+configure_telemetry(app)
 app.middleware("http")(request_context_middleware)
 
 app.add_exception_handler(
@@ -44,6 +45,7 @@ app.add_exception_handler(
 )
 
 app.include_router(router)
+app.include_router(metrics_router)
 app.include_router(health_router)
 app.include_router(order_router)
 

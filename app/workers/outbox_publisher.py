@@ -10,6 +10,7 @@ from app.repositories.outbox_repository import (
     list_unpublished_events,
     mark_event_published,
 )
+from app.observability.metrics import OUTBOX_EVENTS_PUBLISHED_TOTAL
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,10 @@ def publish_pending_outbox_events() -> int:
                 event.event_id,
                 event.topic,
             )
+            OUTBOX_EVENTS_PUBLISHED_TOTAL.labels(
+                topic=event.topic,
+                event_type=event.event_type,
+            ).inc()
 
             published_count += 1
 

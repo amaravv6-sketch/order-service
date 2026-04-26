@@ -20,6 +20,8 @@ from app.services.order_service import CreateOrderRequest, create_order
 from typing import Annotated
 
 from app.security.auth import CurrentUser, require_role
+from app.observability.metrics import ORDERS_CREATED_TOTAL
+
 
 router = APIRouter()
 
@@ -70,6 +72,7 @@ def create_order_endpoint(
         quantity=order.quantity,
         total=order.total,
     )
+    ORDERS_CREATED_TOTAL.inc()
 
     return OrderApiResponse(
         id=saved_order.id,

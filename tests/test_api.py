@@ -28,6 +28,8 @@ os.environ["JWT_SECRET_KEY"] = "test-secret"
 os.environ["JWT_ALGORITHM"] = "HS256"
 os.environ["JWT_ISSUER"] = "order-service"
 os.environ["JWT_AUDIENCE"] = "order-service-api"
+os.environ["OTEL_ENABLED"] = "false"
+os.environ["OTEL_CONSOLE_EXPORTER_ENABLED"] = "false"
 
 from app.db.models import Base
 from app.db.session import get_db
@@ -578,3 +580,36 @@ def test_readiness_check_when_dependencies_are_available() -> None:
     assert body["environment"] == "test"
     assert body["checks"]["database"] == "ok"
     assert body["checks"]["redis"] == "ok"
+
+
+class FailingRedis:
+    def ping(self) -> bool:
+        raise ConnectionError("Redis unavailable")
+
+
+def test_readiness_check_returns_503_when_redis_fails() -> None:
+    def override_failing_redis() -> FailingRedis:
+        return FailingRedis()
+
+    app.dependency_overrides[get_redis_client] = override_failing_redis
+
+    response = client.get("/health/ready")
+
+    assert response.status_code == 503
+
+    body = response.json()
+
+    assert body["status"] == "not_ready"
+    assert body["checks"]["database"] == "ok"
+    assert body["checks"]["redis"] == "failed"
+
+    app.dependency_overrides[get_redis_client] = override_get_redis_client
+
+
+
+def test_metrics_endpoint_exposes_prometheus_metrics() -> None:
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "text/plain" in response.headers["content-type"]
+    assert "order_service_http_requests_total" in response.text

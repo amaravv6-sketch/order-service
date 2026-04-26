@@ -5,8 +5,21 @@ from typing import Awaitable, Callable
 
 from fastapi import Request, Response
 
+from app.observability.metrics import (
+    HTTP_REQUEST_DURATION_SECONDS,
+    HTTP_REQUESTS_TOTAL,
+)
+
 logger = logging.getLogger(__name__)
 
+def _get_route_path(request: Request) -> str:
+    route = request.scope.get("route")
+    route_path = getattr(route, "path", None)
+
+    if isinstance(route_path, str):
+        return route_path
+
+    return request.url.path
 
 async def request_context_middleware(
     request: Request,
@@ -20,7 +33,21 @@ async def request_context_middleware(
     try:
         response = await call_next(request)
     except Exception:
-        duration_ms = (time.perf_counter() - start_time) * 1000
+        duration_seconds = time.perf_counter() - start_time
+        duration_ms = duration_seconds * 1000
+
+        path = _get_route_path(request)
+
+        HTTP_REQUESTS_TOTAL.labels(
+            method=request.method,
+            path=path,
+            status_code="500",
+        ).inc()
+
+        HTTP_REQUEST_DURATION_SECONDS.labels(
+            method=request.method,
+            path=path,
+        ).observe(duration_seconds)
 
         logger.exception(
             "Request failed method=%s path=%s request_id=%s duration_ms=%.2f",
@@ -32,9 +59,23 @@ async def request_context_middleware(
 
         raise
 
-    duration_ms = (time.perf_counter() - start_time) * 1000
+    duration_seconds = time.perf_counter() - start_time
+    duration_ms = duration_seconds * 1000
 
     response.headers["X-Request-ID"] = request_id
+
+    path = _get_route_path(request)
+
+    HTTP_REQUESTS_TOTAL.labels(
+        method=request.method,
+        path=path,
+        status_code=str(response.status_code),
+    ).inc()
+
+    HTTP_REQUEST_DURATION_SECONDS.labels(
+        method=request.method,
+        path=path,
+    ).observe(duration_seconds)
 
     logger.info(
         "Request completed method=%s path=%s status_code=%s request_id=%s duration_ms=%.2f",
