@@ -5,3 +5,9 @@ metadata:
 data:
   ENVIRONMENT: "dev"
   LOG_LEVEL: "INFO"
+  REDIS_URL: "redis://dev-redis:6379/0"
+  KAFKA_BOOTSTRAP_SERVERS: "dev-kafka:9092"
+  ORDER_CREATED_TOPIC: "orders.created"
+  JWT_ALGORITHM: "HS256"
+  JWT_ISSUER: "order-service"
+  JWT_AUDIENCE: "order-service-api"
