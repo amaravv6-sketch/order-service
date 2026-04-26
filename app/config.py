@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     jwt_issuer: str = "order-service"
     jwt_audience: str = "order-service-api"
 
+    otel_enabled: bool = True
+    otel_console_exporter_enabled: bool = True
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

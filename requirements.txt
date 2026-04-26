@@ -11,3 +11,8 @@ kafka-python
 ruff
 mypy
 PyJWT
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-sqlalchemy
+opentelemetry-instrumentation-redis

@@ -17,6 +17,8 @@ services:
       JWT_ALGORITHM: HS256
       JWT_ISSUER: order-service
       JWT_AUDIENCE: order-service-api
+      OTEL_ENABLED: "true"
+      OTEL_CONSOLE_EXPORTER_ENABLED: "true"
     depends_on:
       - postgres
       - redis
@@ -40,6 +42,8 @@ services:
       JWT_ALGORITHM: HS256
       JWT_ISSUER: order-service
       JWT_AUDIENCE: order-service-api
+      OTEL_ENABLED: "true"
+      OTEL_CONSOLE_EXPORTER_ENABLED: "true"
     depends_on:
       - kafka
 
@@ -100,6 +104,8 @@ services:
       JWT_ALGORITHM: HS256
       JWT_ISSUER: order-service
       JWT_AUDIENCE: order-service-api
+      OTEL_ENABLED: "true"
+      OTEL_CONSOLE_EXPORTER_ENABLED: "true"
     depends_on:
       - postgres
       - kafka
