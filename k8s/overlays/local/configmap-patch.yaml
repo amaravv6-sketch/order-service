@@ -11,3 +11,5 @@ data:
   JWT_ALGORITHM: "HS256"
   JWT_ISSUER: "order-service"
   JWT_AUDIENCE: "order-service-api"
+  OTEL_ENABLED: "true"
+  OTEL_CONSOLE_EXPORTER_ENABLED: "true"
